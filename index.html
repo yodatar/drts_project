@@ -1,0 +1,60 @@
+<!DOCTYPE html> 
+<html>
+<head>
+  <title>Javascript Racer</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+
+	<script type="text/javascript" src="socket.io.js"></script>
+
+</head> 
+
+<body>
+
+
+<script type="text/javascript">
+	var socket = io.connect('http://localhost:8080/');
+	socket.on('field', function (data) {
+		console.log(data);
+		$("#field").html(data);
+
+		var n = data.indexOf("?>") + 2;
+		var output = [data.slice(0, n), "<root>", data.slice(n),"</root>"].join('');
+
+		console.log(output);
+
+		xmlDoc = $.parseXML( output ),
+				$xml = $( xmlDoc ),
+				value1 = $xml.find( "NoiseLevel" );
+		var num = Math.round(value1.text());
+
+
+		if(num > 0) {
+			for (i = 0; i < num; i++) {
+				$("#output").append("| ");
+			}
+
+			$("#output").append("<br>");
+
+
+		}
+
+	});
+
+
+
+</script>
+
+
+<div id="field"></div>
+<div id="output"></div>
+
+  <ul>
+    <li><a href='v1.straight.html'>Version 1 - Straight</a></li>
+    <li><a href='v2.curves.html'>Version 2 - Curves</a></li>
+    <li><a href='v3.hills.html'>Version 3 - Hills</a></li>
+    <li><a href='v4.final.html'>Version 4 - Final</a></li>
+  </ul>
+
+</body> 
+</html>
