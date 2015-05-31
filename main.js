@@ -8,9 +8,7 @@ var mysocket = 0;
 app.listen(8080);
 
 function handler (request, response) {
-    var file = __dirname + (request.url == '/' ? '/v4.final.html' : request.url);
-//    var file = __dirname + (request.url == '/' ? '/v1.straight.html' : request.url);
-
+    var file = __dirname + (request.url == '/' ? '/index.html' : request.url);
     fs.readFile(file, function(error, data) {
         if (error) {
             response.writeHead(500);
@@ -23,7 +21,8 @@ function handler (request, response) {
 
 io.sockets.on('connection', function (socket) {
   console.log('index.html connected'); 
-  mysocket = socket;});
+  mysocket = socket;
+});
  
 //udp server on 4711
 var dgram = require("dgram");
