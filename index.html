@@ -2,7 +2,7 @@
 
 <html>
 <head>
-	<title>Javascript Racer - v4 (final)</title>
+	<title>DP</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 	<link href="common.css" rel="stylesheet" type="text/css" />
 	<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
@@ -10,27 +10,25 @@
 </head>
 
 <body>
+
 <div id="field"></div>
 <div id="output"></div>
 <table id="controls">
-<!--	<tr>
-		<td colspan="2">
-			<a href='v1.straight.html'>straight</a> |
-			<a href='v2.curves.html'>curves</a>     |
-			<a href='v3.hills.html'>hills</a>       |
-			<a href='v4.final.html'>final</a>
-		</td>
-	</tr>-->
 	<tr>
-
+		<th><label for="ip">IP :</label></th>
+		<td><span id="ip"></span></td>
+	</tr>
+	<tr>
+		<th><label>PORT :</label></th>
+		<td><span>4711</span></td>
 	</tr>
 	<tr style="visibility: hidden;"><td id="fps" colspan="2" align="right"></td></tr>
 	<tr>
 		<th><label for="resolution">Resolution :</label></th>
 		<td>
 			<select id="resolution" style="width:100%">
-				<option value='fine'>Fine (1280x960)</option>
-				<option selected value='high'>High (1024x768)</option>
+				<option selected value='fine'>Fine (1280x960)</option>
+				<option value='high'>High (1024x768)</option>
 				<option value='medium'>Medium (640x480)</option>
 				<option value='low'>Low (480x360)</option>
 			</select>
@@ -67,6 +65,14 @@
 		<th><label for="fogDensity">Fog Density (<span id="currentFogDensity"></span>) :</label></th>
 		<td><input id="fogDensity" type='range' min='0' max='50' title="integer (0-50)"></td>
 	</tr>
+	<tr>
+		<th><label for="acceleration">Acceleration (<span id="currentAcceleration"></span>) :</label></th>
+		<td><input id="acceleration" type='range' min='-10' max='10' title="integer (-10 - 10)"></td>
+	</tr>
+	<tr>
+		<th><label for="steering">Steering (<span id="currentSteering"></span>) :</label></th>
+		<td><input id="steering" type='range' min='-10' max='10' title="integer (-10 - 10)"></td>
+	</tr>
 </table>
 
 <div id="racer">
@@ -83,7 +89,6 @@
 </div>
 
 <audio id='music'>
-	<source src="music/racer.ogg">
 	<source src="music/racer.mp3">
 </audio>
 <span id="mute"  style="visibility: hidden;"></span>
@@ -92,7 +97,7 @@
 <script src="js/common.js"></script>
 <script>
 
-var fps            = 60;                      // how many 'update' frames per second
+	var fps            = 60;                      // how many 'update' frames per second
 var step           = 1/fps;                   // how long is each frame (in seconds)
 var width          = 1024;                    // logical canvas width
 var height         = 768;                     // logical canvas height
@@ -111,13 +116,13 @@ var ctx            = canvas.getContext('2d'); // ...and its drawing context
 var background     = null;                    // our background image (loaded below)
 var sprites        = null;                    // our spritesheet (loaded below)
 var resolution     = null;                    // scaling factor to provide resolution independence (computed)
-var roadWidth      = 2500;                    // actually half the roads width, easier math if the road spans from -roadWidth to +roadWidth
+var roadWidth      = 3000;                    // actually half the roads width, easier math if the road spans from -roadWidth to +roadWidth
 var segmentLength  = 100;                     // length of a single segment
 var rumbleLength   = 3;                       // number of segments per red/white rumble strip
 var trackLength    = null;                    // z length of entire track (computed)
 var lanes          = 3;                       // number of lanes
 var fieldOfView    = 130;                     // angle (degrees) for field of view
-var cameraHeight   = 5000;                    // z height of camera
+var cameraHeight   = 3500;                    // z height of camera
 var cameraDepth    = null;                    // z distance camera is from screen (computed)
 var drawDistance   = 200;                     // number of segments to draw
 var playerX        = 0;                       // player x offset from center of road (-1 to 1 to stay independent of roadWidth)
@@ -134,6 +139,9 @@ var offRoadLimit   =  maxSpeed/4;             // limit when off road deceleratio
 var totalCars      = 50;                     // total number of cars on the road
 var currentLapTime = 0;                       // current lap time
 var lastLapTime    = null;                    // last lap time
+
+var keyFasterVal = 0;
+var steeringVal = 0;
 
 var keyLeft        = false;
 var keyRight       = false;
@@ -161,7 +169,9 @@ function update(dt) {
 	var dx            = dt * 1 * speedPercent; // at top speed, should be able to cross from left to right (-1 to 1) in 1 second
 	var startPosition = position;
 
-
+	Dom.get('currentAcceleration').innerHTML     = Dom.get('acceleration').value     = 10 - Math.round(keyFasterVal);
+	Dom.get('currentSteering').innerHTML     = Dom.get('steering').value     = Math.round(steeringVal);
+	Dom.get('currentFogDensity').innerHTML     = Dom.get('fogDensity').value     = Math.round(fogDensity);
 
 
 
@@ -674,7 +684,9 @@ Dom.on('roadWidth',      'change', function(ev) { Dom.blur(ev); reset({ roadWidt
 Dom.on('cameraHeight',   'change', function(ev) { Dom.blur(ev); reset({ cameraHeight:  Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
 Dom.on('drawDistance',   'change', function(ev) { Dom.blur(ev); reset({ drawDistance:  Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
 Dom.on('fieldOfView',    'change', function(ev) { Dom.blur(ev); reset({ fieldOfView:   Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
-Dom.on('fogDensity',     'change', function(ev) { Dom.blur(ev); reset({ fogDensity:    Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
+Dom.on('fogDensity',     'change', function(ev) {
+	Dom.get('currentFogDensity').innerHTML     = Dom.get('fogDensity').value     = fogDensity;
+	Dom.blur(ev); reset({ fogDensity:    Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
 
 function refreshTweakUI() {
 	Dom.get('lanes').selectedIndex = lanes-1;
@@ -683,12 +695,20 @@ function refreshTweakUI() {
 	Dom.get('currentDrawDistance').innerHTML   = Dom.get('drawDistance').value   = drawDistance;
 	Dom.get('currentFieldOfView').innerHTML    = Dom.get('fieldOfView').value    = fieldOfView;
 	Dom.get('currentFogDensity').innerHTML     = Dom.get('fogDensity').value     = fogDensity;
+
+/*
+
+	Dom.set("acceleration", keyFasterVal);
+	Dom.set("steering", steeringVal);
+*/
+
 }
 
 //=========================================================================
 
 </script>
 <script type="text/javascript" src="js/control.js"></script>
-
+<script src="http://l2.io/ip.js?var=myip"></script>
+<script>Dom.get("ip").innerHTML = myip;</script>
 </body>
 </html>
